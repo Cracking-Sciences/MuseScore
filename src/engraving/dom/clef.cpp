@@ -132,7 +132,11 @@ ClefType ClefInfo::toWholeTone(ClefType t)
     case ClefType::F_C:
     case ClefType::F_F18C:
     case ClefType::F_19C:
-        return ClefType::F_WHOLETONE;
+        // The default bass-staff clef is the treble-clef glyph marked "15" below (two octaves
+        // down) rather than the literal F-clef glyph, so a WholeTone bass staff reads with the
+        // same clef shape as its treble counterpart -- the two share an identical pitchOffset
+        // (28), so this is a purely visual choice and changes no note's line position.
+        return ClefType::G_WHOLETONE_15MB;
     case ClefType::G8_VA:
         return ClefType::G_WHOLETONE_8VA;
     case ClefType::G15_MA:
