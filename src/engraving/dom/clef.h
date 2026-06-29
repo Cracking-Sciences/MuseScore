@@ -74,6 +74,16 @@ struct ClefInfo
     static SymId symId(ClefType t) { return clefTable[int(t)].m_symId; }
     static const signed char* lines(ClefType t) { return clefTable[int(t)].m_lines; }
     static StaffGroup staffGroup(ClefType t) { return clefTable[int(t)].m_staffGroup; }
+
+    // Whole-tone clef variants occupy one contiguous block in ClefType (see types.h).
+    static bool isWholeTone(ClefType t) { return t >= ClefType::G_WHOLETONE && t <= ClefType::F_WHOLETONE_15MB; }
+
+    // Map a standard (diatonic) G/F-family clef (including 8va/15ma/8vb/15mb variants) onto its
+    // whole-tone-calibrated equivalent (same glyph, whole-tone pitchOffset), and back. Used both when
+    // converting a staff to/from a WholeTone staff type, and to coerce any clef applied afterwards
+    // (e.g. via the clef palette) so it never falls back onto diatonic-calibrated pitch math.
+    static ClefType toWholeTone(ClefType t);
+    static ClefType toStandard(ClefType t);
 };
 
 //---------------------------------------------------------

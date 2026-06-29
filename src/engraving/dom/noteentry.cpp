@@ -142,6 +142,33 @@ NoteVal Score::noteValForPosition(Position pos, AccidentalType at, bool& error)
     }
 
     case StaffGroup::STANDARD: {
+        if (st->staffType(tick)->isWholeToneStaff()) {
+            // Whole-tone staves: the clicked line maps directly to a pitch (no key signature /
+            // AccidentalState lookup), since every line/space is unambiguously one whole-tone step.
+            int step = absStep(line, clef);
+            int octave = step / 6;
+            int stepInOctave = step % 6;
+            int pitch = octave * 12 + stepInOctave * 2;
+            if (at == AccidentalType::SHARP) {
+                pitch += 1;
+            }
+            nval.pitch = clampPitch(pitch);
+            if (style().styleB(Sid::concertPitch)) {
+                nval.tpc1 = pitch2tpc(nval.pitch, Key::C, Prefer::NEAREST);
+            } else {
+                nval.pitch += instr->transpose().chromatic;
+                nval.tpc2 = pitch2tpc(nval.pitch, Key::C, Prefer::NEAREST);
+                Interval v = st->transpose(tick);
+                if (v.isZero()) {
+                    nval.tpc1 = nval.tpc2;
+                } else {
+                    nval.tpc1 = Transpose::transposeTpc(nval.tpc2, v, true);
+                }
+            }
+            stringData->convertPitch(nval.pitch, st, pos.segment->tick(), &nval.string, &nval.fret);
+            break;
+        }
+
         AccidentalVal acci
             = (at == AccidentalType::NONE ? s->measure()->findAccidental(s, staffIdx, line, error) : Accidental::subtype2value(at));
         if (error) {

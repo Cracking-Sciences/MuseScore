@@ -35,35 +35,15 @@
 using namespace mu::engraving;
 
 //---------------------------------------------------------
-//   twinNoteClefFor / remapClefsToTwinNote
-//    Map a staff's existing treble/bass-family clefs onto the TwinNote-flavored
-//    clef variants (same glyph, whole-tone-calibrated pitchOffset) when a staff
-//    is switched to a TwinNote staff type, so existing notes land on the correct
-//    line for the new staff without their pitch/tpc ever being touched.
+//   remapStaffClefs
+//    Map a staff's existing treble/bass-family clefs (including their 8va/15ma/8vb/15mb
+//    octave variants) onto the whole-tone-flavored clef variants (same glyph, whole-tone-
+//    calibrated pitchOffset) when a staff is switched to a WholeTone staff type, so existing
+//    notes land on the correct line for the new staff without their pitch/tpc ever being
+//    touched, and back again on conversion (or undo) to a standard staff.
+//    See ClefInfo::toWholeTone()/toStandard() (clef.h/clef.cpp) for the actual mapping, which is
+//    also used by Score::undoChangeClef() to coerce any clef applied later on a WholeTone staff.
 //---------------------------------------------------------
-
-static ClefType twinNoteClefFor(ClefType ct)
-{
-    switch (ct) {
-    case ClefType::F:
-    case ClefType::F15_MB:
-    case ClefType::F8_VB:
-    case ClefType::F_8VA:
-    case ClefType::F_15MA:
-    case ClefType::F_B:
-    case ClefType::F_C:
-    case ClefType::F_F18C:
-    case ClefType::F_19C:
-        return ClefType::F_TWINNOTE;
-    default:
-        return ClefType::G_TWINNOTE;
-    }
-}
-
-static ClefType standardClefFor(ClefType ct)
-{
-    return ct == ClefType::F_TWINNOTE ? ClefType::F : ClefType::G;
-}
 
 static void remapStaffClefs(Staff* staff, ClefType (* remap)(ClefType))
 {
@@ -368,8 +348,8 @@ void ChangeStaffType::flip(EditData*)
 
     bool invisibleChanged = oldStaffType.invisible() != staffType.invisible();
     bool fromTabToStandard = oldStaffType.isTabStaff() && !staffType.isTabStaff();
-    bool toTwinNote = !oldStaffType.isTwinNoteStaff() && staffType.isTwinNoteStaff();
-    bool fromTwinNote = oldStaffType.isTwinNoteStaff() && !staffType.isTwinNoteStaff();
+    bool toWholeTone = !oldStaffType.isWholeToneStaff() && staffType.isWholeToneStaff();
+    bool fromWholeTone = oldStaffType.isWholeToneStaff() && !staffType.isWholeToneStaff();
 
     staffType = oldStaffType;
 
@@ -385,10 +365,10 @@ void ChangeStaffType::flip(EditData*)
         GuitarBend::adaptBendsFromTabToStandardStaff(staff);
     }
 
-    if (toTwinNote) {
-        remapStaffClefs(staff, twinNoteClefFor);
-    } else if (fromTwinNote) {
-        remapStaffClefs(staff, standardClefFor);
+    if (toWholeTone) {
+        remapStaffClefs(staff, ClefInfo::toWholeTone);
+    } else if (fromWholeTone) {
+        remapStaffClefs(staff, ClefInfo::toStandard);
     }
 
     staff->triggerLayout();

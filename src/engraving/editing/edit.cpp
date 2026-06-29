@@ -5731,6 +5731,20 @@ void Score::undoChangeClef(Staff* ostaff, EngravingItem* e, ClefType ct, bool fo
         return;
     }
 
+    // Coerce the incoming clef to match the target staff's WholeTone-ness, so that any clef change
+    // (palette, instrument change, etc.) made after the initial staff-type conversion never lets a
+    // diatonic-calibrated clef end up active on a WholeTone staff (or vice versa) and scramble line
+    // positions in Note::updateRelLine().
+    const StaffType* ostaffType = ostaff->staffType(e->tick());
+    if (ostaffType) {
+        bool wholeTone = ostaffType->isWholeToneStaff();
+        if (wholeTone && !ClefInfo::isWholeTone(ct)) {
+            ct = ClefInfo::toWholeTone(ct);
+        } else if (!wholeTone && ClefInfo::isWholeTone(ct)) {
+            ct = ClefInfo::toStandard(ct);
+        }
+    }
+
     bool moveClef = false;
     SegmentType st = SegmentType::Clef;
     if (e->isMeasure()) {

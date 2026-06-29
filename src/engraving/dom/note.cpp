@@ -1631,6 +1631,9 @@ public:
     int string = 0;
     EditMode mode = EditMode_Undefined;
     PointF delta;
+    // WholeTone staves only: the note's accidental at drag start (NATURAL or SHARP), preserved
+    // and reapplied at the new line throughout the drag (see Note::verticalDrag).
+    AccidentalVal accidentalVal = AccidentalVal::NATURAL;
 
     virtual EditDataType type() override { return EditDataType::NoteEditData; }
 
@@ -2093,9 +2096,9 @@ void Note::updateAccidental(AccidentalState* as)
     }
 
     const StaffType* st = staff() ? staff()->staffTypeForElement(this) : nullptr;
-    if (st && st->isTwinNoteStaff()) {
-        int absLine = absStepTwinNote(epitch());
-        AccidentalType acci = needsSharpTwinNote(epitch()) ? AccidentalType::SHARP : AccidentalType::NONE;
+    if (st && st->isWholeToneStaff()) {
+        int absLine = absStepWholeTone(epitch());
+        AccidentalType acci = needsSharpWholeTone(epitch()) ? AccidentalType::SHARP : AccidentalType::NONE;
         if (acci != AccidentalType::NONE && !m_hidden) {
             if (m_accidental == 0) {
                 Accidental* a = Factory::createAccidental(this);
@@ -2668,6 +2671,9 @@ void Note::startDrag(EditData& ed)
     ned->e      = this;
     ned->line   = m_line;
     ned->string = m_string;
+    if (staffType() && staffType()->isWholeToneStaff()) {
+        ned->accidentalVal = needsSharpWholeTone(epitch()) ? AccidentalVal::SHARP : AccidentalVal::NATURAL;
+    }
     ned->pushProperty(Pid::PITCH);
     ned->pushProperty(Pid::TPC1);
     ned->pushProperty(Pid::TPC2);
@@ -2784,6 +2790,29 @@ void Note::verticalDrag(EditData& ed)
                     nn->triggerLayout();
                 }
             }
+        }
+    } else if (staffType()->isWholeToneStaff()) {
+        staff_idx_t idx = chord()->vStaffIdx();
+        int nStep = absStep(ned->line + lineOffset, score()->staff(idx)->clef(_tick));
+        nStep = std::max(0, nStep);
+        int octave = nStep / 6;
+        int newPitch = octave * 12 + (nStep % 6) * 2 + int(ned->accidentalVal);
+        newPitch = std::clamp(newPitch, 0, 127);
+
+        int newTpc1 = pitch2tpc(newPitch, Key::C, Prefer::NEAREST);
+        int newTpc2 = newTpc1;
+        if (concertPitch()) {
+            newTpc2 = transposeTpc(newTpc1);
+        } else {
+            newPitch += staff()->transpose(_tick).chromatic;
+            newTpc1 = transposeTpc(newTpc2);
+        }
+
+        AccidentalType keepAccidental = ned->accidentalVal == AccidentalVal::SHARP ? AccidentalType::SHARP : AccidentalType::NONE;
+        for (Note* nn : tiedNotes()) {
+            nn->setAccidentalType(keepAccidental);
+            nn->setPitch(newPitch, newTpc1, newTpc2);
+            nn->triggerLayout();
         }
     } else {
         staff_idx_t idx = chord()->vStaffIdx();
@@ -2918,7 +2947,7 @@ void Note::updateRelLine(int absLine, bool undoable)
 void Note::updateLine()
 {
     const StaffType* st = staff() ? staff()->staffTypeForElement(this) : nullptr;
-    int absLine = (st && st->isTwinNoteStaff()) ? absStepTwinNote(epitch()) : absStep(tpc(), epitch());
+    int absLine = (st && st->isWholeToneStaff()) ? absStepWholeTone(epitch()) : absStep(tpc(), epitch());
     updateRelLine(absLine, false);
 }
 

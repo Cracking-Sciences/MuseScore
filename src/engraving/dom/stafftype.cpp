@@ -192,7 +192,7 @@ bool StaffType::operator==(const StaffType& st) const
     equal &= (m_genClef == st.m_genClef);
     equal &= (m_genTimesig == st.m_genTimesig);
     equal &= (m_genKeysig == st.m_genKeysig);
-    equal &= (m_twinNoteStaff == st.m_twinNoteStaff);
+    equal &= (m_wholeToneStaff == st.m_wholeToneStaff);
     equal &= (m_noteHeadScheme == st.m_noteHeadScheme);
     equal &= (m_durationFontSize == st.m_durationFontSize);
     equal &= (m_durationFontUserY == st.m_durationFontUserY);
@@ -269,8 +269,8 @@ StaffTypes StaffType::type() const
         { u"tab9StrSimple", StaffTypes::TAB_9SIMPLE },
         { u"tab10StrSimple", StaffTypes::TAB_10SIMPLE },
 
-        { u"twinNoteTreble", StaffTypes::TWINNOTE_TREBLE },
-        { u"twinNoteBass", StaffTypes::TWINNOTE_BASS },
+        { u"wholeToneTreble", StaffTypes::WHOLETONE_TREBLE },
+        { u"wholeToneBass", StaffTypes::WHOLETONE_BASS },
     };
 
     return muse::value(xmlNameToType, m_xmlName, StaffTypes::STANDARD);
@@ -1159,16 +1159,16 @@ void StaffType::initStaffTypes(const Color& defaultColor)
         StaffType(StaffGroup::TAB, u"tab9StrSimple",  muse::mtrc("engraving", "Tab. 9-str. simple"),  9,  0, 1.5, true,  true, true, false, false,  defaultColor, u"MuseScore Tab Modern", 15, 0, false, true,  u"MuseScore Tab Sans",                     9, 0,  TablatureSymbolRepeat::NEVER, false, TablatureMinimStyle::NONE,    true,  false, true,  false, false, false, true,  false),
         StaffType(StaffGroup::TAB, u"tab10StrSimple", muse::mtrc("engraving", "Tab. 10-str. simple"), 10, 0, 1.5, true,  true, true, false, false,  defaultColor, u"MuseScore Tab Modern", 15, 0, false, true,  u"MuseScore Tab Sans",                     9, 0,  TablatureSymbolRepeat::NEVER, false, TablatureMinimStyle::NONE,    true,  false, true,  false, false, false, true,  false),
 
-//                       group,              xml-name,          human-readable-name                        lin stpOff  dist clef   bars stmless time  key    ledger invis     color
-        StaffType(StaffGroup::STANDARD,   u"twinNoteTreble", muse::mtrc("engraving", "TwinNote treble"),    5, 0,     1,   true,  true, false, true, false, true, false,  defaultColor),
-        StaffType(StaffGroup::STANDARD,   u"twinNoteBass",   muse::mtrc("engraving", "TwinNote bass"),      5, 0,     1,   true,  true, false, true, false, true, false,  defaultColor),
+//                       group,              xml-name,           human-readable-name                       lin stpOff  dist clef   bars stmless time  key    ledger invis     color
+        StaffType(StaffGroup::STANDARD,   u"wholeToneTreble", muse::mtrc("engraving", "Whole tone treble"), 5, 0,     1,   true,  true, false, true, false, true, false,  defaultColor),
+        StaffType(StaffGroup::STANDARD,   u"wholeToneBass",   muse::mtrc("engraving", "Whole tone bass"),   5, 0,     1,   true,  true, false, true, false, true, false,  defaultColor),
     };
 
-    // TwinNote staves use a linear whole-tone (2-semitone-per-step) pitch-to-line mapping instead
+    // Whole-tone staves use a linear whole-tone (2-semitone-per-step) pitch-to-line mapping instead
     // of the diatonic 7-step mapping; see Note::updateLine()/updateAccidental(). No key signature
     // is generated since whole-tone notation has no diatonic key concept.
-    m_presets[size_t(StaffTypes::TWINNOTE_TREBLE)].setTwinNoteStaff(true);
-    m_presets[size_t(StaffTypes::TWINNOTE_BASS)].setTwinNoteStaff(true);
+    m_presets[size_t(StaffTypes::WHOLETONE_TREBLE)].setWholeToneStaff(true);
+    m_presets[size_t(StaffTypes::WHOLETONE_BASS)].setWholeToneStaff(true);
 }
 /* *INDENT-ON* */
 } // namespace mu::engraving

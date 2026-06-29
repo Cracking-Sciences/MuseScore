@@ -355,23 +355,46 @@ void EditNote::changeAccidental(Score* score, Note* note, AccidentalType acciden
         || clef == ClefType::TAB4_SERIF) {
         return;
     }
-    int step      = ClefInfo::pitchOffset(clef) - note->line();
-    while (step < 0) {
-        step += 7;
-    }
-    step %= 7;
-    //
-    // accidental change may result in pitch change
-    //
+    int pitch;
+    int tpc;
     AccidentalVal acc2 = measure->findAccidental(note);
     AccidentalVal acc = (accidental == AccidentalType::NONE) ? acc2 : Accidental::subtype2value(accidental);
 
-    int pitch = line2pitch(note->line(), clef, Key::C) + int(acc);
-    if (!note->concertPitch()) {
-        pitch += note->transposition();
-    }
+    if (ClefInfo::isWholeTone(clef)) {
+        // WholeTone notation only ever needs a natural or a sharp at any given line (see
+        // Note::updateAccidental/needsSharpWholeTone): any other accidental would compute a
+        // pitch landing on a different absLine, which would visually move the note instead of
+        // just updating its pitch in place. Collapse to whichever of those two is closest.
+        if (accidental == AccidentalType::NONE) {
+            acc = AccidentalVal::NATURAL;
+        } else if (acc == AccidentalVal::FLAT || acc == AccidentalVal::FLAT2) {
+            acc = AccidentalVal::NATURAL;
+        } else if (acc == AccidentalVal::SHARP2) {
+            acc = AccidentalVal::SHARP;
+        }
 
-    int tpc = step2tpc(step, acc);
+        pitch = line2pitch(note->line(), clef, Key::C) + int(acc);
+        if (!note->concertPitch()) {
+            pitch += note->transposition();
+        }
+
+        tpc = pitch2tpc(pitch, Key::C, Prefer::NEAREST);
+    } else {
+        int step = ClefInfo::pitchOffset(clef) - note->line();
+        while (step < 0) {
+            step += 7;
+        }
+        step %= 7;
+        //
+        // accidental change may result in pitch change
+        //
+        pitch = line2pitch(note->line(), clef, Key::C) + int(acc);
+        if (!note->concertPitch()) {
+            pitch += note->transposition();
+        }
+
+        tpc = step2tpc(step, acc);
+    }
 
     bool forceRemove = false;
     bool forceAdd = false;
@@ -585,6 +608,18 @@ void EditNote::upDown(Score* score, bool up, UpDownMode mode)
 
             case UpDownMode::DIATONIC:
             {
+                if (staff->staffType(tick)->isWholeToneStaff()) {
+                    // WholeTone staves have no diatonic scale: every up/down move is a fixed
+                    // whole-tone step (2 semitones), regardless of line/accidental state.
+                    int testPitch = pitch + (up ? 2 : -2);
+                    if (testPitch <= 127 && testPitch >= 0) {
+                        newPitch = testPitch;
+                        newTpc1 = pitch2tpc(newPitch, Key::C, Prefer::NEAREST);
+                        newTpc2 = oNote->transposeTpc(newTpc1);
+                    }
+                    break;
+                }
+
                 Note* firstTiedNote = oNote->firstTiedNote();
                 int newLine = firstTiedNote->line() + (up ? -1 : 1);
                 Staff* vStaff = score->staff(firstTiedNote->chord()->vStaffIdx());

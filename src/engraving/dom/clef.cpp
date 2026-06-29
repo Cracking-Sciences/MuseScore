@@ -89,13 +89,90 @@ const ClefInfo ClefInfo::clefTable[] = {
     { ClefType::C4_8VB,  4, 30, { 6, 2, 5, 1, 4, 0, 3, 3, 0, 4, 1, 5, 2, 6 },  SymId::cClef8vb,         StaffGroup::STANDARD },
     { ClefType::G8_VB_C, 2, 38, { 0, 3, -1, 2, 5, 1, 4, 4, 1, 5, 2, 6, 3, 7 }, SymId::gClef8vbCClef,    StaffGroup::STANDARD },
 
-    // TwinNote-style whole-tone staves: pitchOffset is calibrated against absStepTwinNote()
-    // (6 steps/octave) rather than the diatonic absStep() (7 steps/octave) used by every other
-    // entry above. m_lines[] is unused on this path (see Note::updateAccidental) and is just
-    // copied from the reused glyph's standard entry as a harmless placeholder.
-    { ClefType::G_TWINNOTE, 2, 39, { 0, 3, -1, 2, 5, 1, 4, 4, 1, 5, 2, 6, 3, 7 }, SymId::gClef,         StaffGroup::STANDARD },
-    { ClefType::F_TWINNOTE, 4, 29, { 2, 5, 1, 4, 7, 3, 6, 6, 3, 7, 4, 8, 5, 9 },  SymId::fClef,         StaffGroup::STANDARD },
+    // Whole-tone staves: pitchOffset is calibrated against absStepWholeTone() (6 steps/octave)
+    // rather than the diatonic absStep() (7 steps/octave) used by every other entry above, so
+    // that the middle staff line lands on a natural (no accidental) C: C5 for the treble-family
+    // clef, C3 for the bass-family clef. The _8VA/_15MA/_8VB/_15MB variants shift that anchor by
+    // whole octaves (6 whole-tone steps each), mirroring the diatonic G8_VA/G15_MA/etc. variants.
+    // m_lines[] is unused on this path (see Note::updateAccidental) and is just copied from the
+    // reused glyph's standard entry as a harmless placeholder.
+    { ClefType::G_WHOLETONE,       2, 40, { 0, 3, -1, 2, 5, 1, 4, 4, 1, 5, 2, 6, 3, 7 }, SymId::gClef,      StaffGroup::STANDARD },
+    { ClefType::G_WHOLETONE_8VA,   2, 46, { 0, 3, -1, 2, 5, 1, 4, 4, 1, 5, 2, 6, 3, 7 }, SymId::gClef8va,   StaffGroup::STANDARD },
+    { ClefType::G_WHOLETONE_15MA,  2, 52, { 0, 3, -1, 2, 5, 1, 4, 4, 1, 5, 2, 6, 3, 7 }, SymId::gClef15ma,  StaffGroup::STANDARD },
+    { ClefType::G_WHOLETONE_8VB,   2, 34, { 0, 3, -1, 2, 5, 1, 4, 4, 1, 5, 2, 6, 3, 7 }, SymId::gClef8vb,   StaffGroup::STANDARD },
+    { ClefType::G_WHOLETONE_15MB,  2, 28, { 0, 3, -1, 2, 5, 1, 4, 4, 1, 5, 2, 6, 3, 7 }, SymId::gClef15mb,  StaffGroup::STANDARD },
+    { ClefType::F_WHOLETONE,       4, 28, { 2, 5, 1, 4, 7, 3, 6, 6, 3, 7, 4, 8, 5, 9 },  SymId::fClef,      StaffGroup::STANDARD },
+    { ClefType::F_WHOLETONE_8VA,   4, 34, { 2, 5, 1, 4, 7, 3, 6, 6, 3, 7, 4, 8, 5, 9 },  SymId::fClef8va,   StaffGroup::STANDARD },
+    { ClefType::F_WHOLETONE_15MA,  4, 40, { 2, 5, 1, 4, 7, 3, 6, 6, 3, 7, 4, 8, 5, 9 },  SymId::fClef15ma,  StaffGroup::STANDARD },
+    { ClefType::F_WHOLETONE_8VB,   4, 22, { 2, 5, 1, 4, 7, 3, 6, 6, 3, 7, 4, 8, 5, 9 },  SymId::fClef8vb,   StaffGroup::STANDARD },
+    { ClefType::F_WHOLETONE_15MB,  4, 16, { 2, 5, 1, 4, 7, 3, 6, 6, 3, 7, 4, 8, 5, 9 },  SymId::fClef15mb,  StaffGroup::STANDARD },
 };
+
+//---------------------------------------------------------
+//   ClefInfo::toWholeTone / ClefInfo::toStandard
+//    Map a standard G/F-family clef (and its 8va/15ma/8vb/15mb variants) onto its whole-tone
+//    equivalent, and back. Single source of truth used both by the one-time staff-type-conversion
+//    remap (editstaff.cpp) and by undoChangeClef() (edit.cpp) to coerce any clef applied afterwards
+//    on a WholeTone staff.
+//---------------------------------------------------------
+
+ClefType ClefInfo::toWholeTone(ClefType t)
+{
+    switch (t) {
+    case ClefType::F_8VA:
+        return ClefType::F_WHOLETONE_8VA;
+    case ClefType::F_15MA:
+        return ClefType::F_WHOLETONE_15MA;
+    case ClefType::F8_VB:
+        return ClefType::F_WHOLETONE_8VB;
+    case ClefType::F15_MB:
+        return ClefType::F_WHOLETONE_15MB;
+    case ClefType::F:
+    case ClefType::F_B:
+    case ClefType::F_C:
+    case ClefType::F_F18C:
+    case ClefType::F_19C:
+        return ClefType::F_WHOLETONE;
+    case ClefType::G8_VA:
+        return ClefType::G_WHOLETONE_8VA;
+    case ClefType::G15_MA:
+        return ClefType::G_WHOLETONE_15MA;
+    case ClefType::G8_VB:
+    case ClefType::G8_VB_O:
+    case ClefType::G8_VB_P:
+        return ClefType::G_WHOLETONE_8VB;
+    case ClefType::G15_MB:
+        return ClefType::G_WHOLETONE_15MB;
+    default:
+        return isWholeTone(t) ? t : ClefType::G_WHOLETONE;
+    }
+}
+
+ClefType ClefInfo::toStandard(ClefType t)
+{
+    switch (t) {
+    case ClefType::F_WHOLETONE_8VA:
+        return ClefType::F_8VA;
+    case ClefType::F_WHOLETONE_15MA:
+        return ClefType::F_15MA;
+    case ClefType::F_WHOLETONE_8VB:
+        return ClefType::F8_VB;
+    case ClefType::F_WHOLETONE_15MB:
+        return ClefType::F15_MB;
+    case ClefType::F_WHOLETONE:
+        return ClefType::F;
+    case ClefType::G_WHOLETONE_8VA:
+        return ClefType::G8_VA;
+    case ClefType::G_WHOLETONE_15MA:
+        return ClefType::G15_MA;
+    case ClefType::G_WHOLETONE_8VB:
+        return ClefType::G8_VB;
+    case ClefType::G_WHOLETONE_15MB:
+        return ClefType::G15_MB;
+    default:
+        return isWholeTone(t) ? ClefType::G : t;
+    }
+}
 
 //---------------------------------------------------------
 //   Clef

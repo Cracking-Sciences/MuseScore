@@ -1339,8 +1339,16 @@ static const std::vector<Item<ClefType> > CLEF_TYPES = {
     { ClefType::C4_8VB,     "C4_8VB",   muse::TranslatableString("engraving/cleftype", "Tenor clef 8va bassa") },
     { ClefType::G8_VB_C,    "G8vbc",    muse::TranslatableString("engraving/cleftype", "G clef ottava bassa with C clef") },
 
-    { ClefType::G_TWINNOTE, "G_TWINNOTE", muse::TranslatableString("engraving/cleftype", "TwinNote treble clef") },
-    { ClefType::F_TWINNOTE, "F_TWINNOTE", muse::TranslatableString("engraving/cleftype", "TwinNote bass clef") },
+    { ClefType::G_WHOLETONE,      "G_WHOLETONE",      muse::TranslatableString("engraving/cleftype", "Whole-tone treble clef") },
+    { ClefType::G_WHOLETONE_8VA,  "G_WHOLETONE_8VA",  muse::TranslatableString("engraving/cleftype", "Whole-tone treble clef 8va alta") },
+    { ClefType::G_WHOLETONE_15MA, "G_WHOLETONE_15MA", muse::TranslatableString("engraving/cleftype", "Whole-tone treble clef 15ma alta") },
+    { ClefType::G_WHOLETONE_8VB,  "G_WHOLETONE_8VB",  muse::TranslatableString("engraving/cleftype", "Whole-tone treble clef 8va bassa") },
+    { ClefType::G_WHOLETONE_15MB, "G_WHOLETONE_15MB", muse::TranslatableString("engraving/cleftype", "Whole-tone treble clef 15ma bassa") },
+    { ClefType::F_WHOLETONE,      "F_WHOLETONE",      muse::TranslatableString("engraving/cleftype", "Whole-tone bass clef") },
+    { ClefType::F_WHOLETONE_8VA,  "F_WHOLETONE_8VA",  muse::TranslatableString("engraving/cleftype", "Whole-tone bass clef 8va alta") },
+    { ClefType::F_WHOLETONE_15MA, "F_WHOLETONE_15MA", muse::TranslatableString("engraving/cleftype", "Whole-tone bass clef 15ma alta") },
+    { ClefType::F_WHOLETONE_8VB,  "F_WHOLETONE_8VB",  muse::TranslatableString("engraving/cleftype", "Whole-tone bass clef 8va bassa") },
+    { ClefType::F_WHOLETONE_15MB, "F_WHOLETONE_15MB", muse::TranslatableString("engraving/cleftype", "Whole-tone bass clef 15ma bassa") },
 };
 
 const muse::TranslatableString& TConv::userName(ClefType v)

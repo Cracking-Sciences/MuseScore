@@ -76,10 +76,10 @@ extern int absStep(int line, ClefType clef);
 extern int relStep(int line, ClefType clef);
 extern int relStep(int pitch, int tpc, ClefType clef);
 
-// TwinNote: linear whole-tone (2-semitone-per-step) equivalent of absStep()/tpc2alter(),
-// used instead of the diatonic 7-step mapping on staves where StaffType::isTwinNoteStaff() is true.
-extern int absStepTwinNote(int pitch);
-extern bool needsSharpTwinNote(int pitch);
+// WholeTone: linear whole-tone (2-semitone-per-step) equivalent of absStep()/tpc2alter(),
+// used instead of the diatonic 7-step mapping on staves where StaffType::isWholeToneStaff() is true.
+extern int absStepWholeTone(int pitch);
+extern bool needsSharpWholeTone(int pitch);
 extern int pitch2step(int pitch);
 extern int step2pitch(int step);
 int chromaticPitchSteps(const Note* noteL, const Note* noteR, const int nominalDiatonicSteps);

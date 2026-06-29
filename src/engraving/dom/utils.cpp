@@ -428,6 +428,13 @@ int y2pitch(double y, ClefType clef, double _spatium)
 int line2pitch(int line, ClefType clef, Key key)
 {
     int l = std::max(ClefInfo::pitchOffset(clef) - line, 0);
+
+    if (ClefInfo::isWholeTone(clef)) {
+        int octave = l / 6;
+        l %= 6;
+        return clampPitch(octave * PITCH_DELTA_OCTAVE + l * 2);
+    }
+
     int octave = l / STEP_DELTA_OCTAVE;
     l %= STEP_DELTA_OCTAVE;
 
@@ -725,18 +732,18 @@ int relStep(int pitch, int tpc, ClefType clef)
 }
 
 //---------------------------------------------------------
-//   absStepTwinNote / needsSharpTwinNote
-///   TwinNote staves use a whole-tone scale (6 steps/octave, 2 semitones each) instead of the
+//   absStepWholeTone / needsSharpWholeTone
+///   WholeTone staves use a whole-tone scale (6 steps/octave, 2 semitones each) instead of the
 ///   diatonic 7-step scale: every other chromatic pitch is a "natural" step, the ones in between
 ///   are notated as a sharp of the step below (no flats, no key signature).
 //---------------------------------------------------------
 
-int absStepTwinNote(int pitch)
+int absStepWholeTone(int pitch)
 {
     return (pitch / 12) * 6 + (pitch % 12) / 2;
 }
 
-bool needsSharpTwinNote(int pitch)
+bool needsSharpWholeTone(int pitch)
 {
     return (pitch % 12) % 2 != 0;
 }
