@@ -64,7 +64,8 @@ function(build_folder
     string(REGEX REPLACE ".*Visual Studio ([0-9]+).*" "VS\\1" GEN_SHORT "${GEN_SHORT}")
     string(REGEX REPLACE ".*MinGW.*" "MinGW" GEN_SHORT "${GEN_SHORT}")
     string(REGEX REPLACE ".*Makefile.*" "Make" GEN_SHORT "${GEN_SHORT}")
-    set(BUILD_FOLDER "${PLATFORM}-Qt${QT_VERSION}-${QT_COMPILER}-${GEN_SHORT}-${BUILD_TYPE}")
+    # set(BUILD_FOLDER "${PLATFORM}-Qt${QT_VERSION}-${QT_COMPILER}-${GEN_SHORT}-${BUILD_TYPE}")
+    set(BUILD_FOLDER "b")
     string(REGEX REPLACE "[ /\\]" "" BUILD_FOLDER "${BUILD_FOLDER}") # remove spaces and slashes
     set("${VAR_NAME}" "${BUILD_FOLDER}" PARENT_SCOPE)
 endfunction()
@@ -148,7 +149,7 @@ endif()
 
 fn__get_option(GENERATOR -G ${CONFIGURE_ARGS})
 if(WIN32)
-    fn__set_default(GENERATOR "Visual Studio 17 2022")
+    fn__set_default(GENERATOR "Visual Studio 18 2026")
 else()
     fn__set_default(GENERATOR "Unix Makefiles")
 endif()
