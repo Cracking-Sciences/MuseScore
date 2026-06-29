@@ -88,6 +88,13 @@ const ClefInfo ClefInfo::clefTable[] = {
 
     { ClefType::C4_8VB,  4, 30, { 6, 2, 5, 1, 4, 0, 3, 3, 0, 4, 1, 5, 2, 6 },  SymId::cClef8vb,         StaffGroup::STANDARD },
     { ClefType::G8_VB_C, 2, 38, { 0, 3, -1, 2, 5, 1, 4, 4, 1, 5, 2, 6, 3, 7 }, SymId::gClef8vbCClef,    StaffGroup::STANDARD },
+
+    // TwinNote-style whole-tone staves: pitchOffset is calibrated against absStepTwinNote()
+    // (6 steps/octave) rather than the diatonic absStep() (7 steps/octave) used by every other
+    // entry above. m_lines[] is unused on this path (see Note::updateAccidental) and is just
+    // copied from the reused glyph's standard entry as a harmless placeholder.
+    { ClefType::G_TWINNOTE, 2, 39, { 0, 3, -1, 2, 5, 1, 4, 4, 1, 5, 2, 6, 3, 7 }, SymId::gClef,         StaffGroup::STANDARD },
+    { ClefType::F_TWINNOTE, 4, 29, { 2, 5, 1, 4, 7, 3, 6, 6, 3, 7, 4, 8, 5, 9 },  SymId::fClef,         StaffGroup::STANDARD },
 };
 
 //---------------------------------------------------------

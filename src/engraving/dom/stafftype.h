@@ -128,6 +128,7 @@ enum class StaffTypes : signed char {
     TAB_ITALIAN, TAB_FRENCH,
     TAB_7COMMON, TAB_8COMMON, TAB_9COMMON, TAB_10COMMON,
     TAB_7SIMPLE, TAB_8SIMPLE, TAB_9SIMPLE, TAB_10SIMPLE,
+    TWINNOTE_TREBLE, TWINNOTE_BASS,
     STAFF_TYPES,
     // some useful shorthands:
     PERC_DEFAULT = StaffTypes::PERC_5LINE,
@@ -305,6 +306,8 @@ public:
 
     bool isTabStaff() const { return m_group == StaffGroup::TAB; }
     bool isDrumStaff() const { return m_group == StaffGroup::PERCUSSION; }
+    bool isTwinNoteStaff() const { return m_twinNoteStaff; }
+    void setTwinNoteStaff(bool val) { m_twinNoteStaff = val; }
 
     bool isSimpleTabStaff() const;
     bool isCommonTabStaff() const;
@@ -355,6 +358,9 @@ private:
     bool m_genClef = true;         // create clef at beginning of system
     bool m_genTimesig = true;      // whether time signature is shown or not
     bool m_genKeysig = true;       // create key signature at beginning of system
+
+    // TwinNote: whole-tone-spaced staff (every line/space step is 2 semitones, see Note::updateLine/updateAccidental)
+    bool m_twinNoteStaff = false;
 
     // Standard: configurable properties
     NoteHeadScheme m_noteHeadScheme = NoteHeadScheme::HEAD_NORMAL;

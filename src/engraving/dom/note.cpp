@@ -2092,6 +2092,30 @@ void Note::updateAccidental(AccidentalState* as)
         return;
     }
 
+    const StaffType* st = staff() ? staff()->staffTypeForElement(this) : nullptr;
+    if (st && st->isTwinNoteStaff()) {
+        int absLine = absStepTwinNote(epitch());
+        AccidentalType acci = needsSharpTwinNote(epitch()) ? AccidentalType::SHARP : AccidentalType::NONE;
+        if (acci != AccidentalType::NONE && !m_hidden) {
+            if (m_accidental == 0) {
+                Accidental* a = Factory::createAccidental(this);
+                a->setParent(this);
+                a->setAccidentalType(acci);
+                a->setVisible(visible());
+                score()->undoAddElement(a);
+            } else if (m_accidental->accidentalType() != acci) {
+                Accidental* a = m_accidental->clone();
+                a->setParent(this);
+                a->setAccidentalType(acci);
+                score()->undoChangeElement(m_accidental, a);
+            }
+        } else if (m_accidental && m_accidental->role() == AccidentalRole::AUTO) {
+            score()->undoRemoveElement(m_accidental);
+        }
+        updateRelLine(absLine, true);
+        return;
+    }
+
     int absLine = absStep(tpc(), epitch());
 
     // Ensure m_centOffset and microtonal accidental match (they can mismatch when switching from TAB)
@@ -2893,7 +2917,8 @@ void Note::updateRelLine(int absLine, bool undoable)
 
 void Note::updateLine()
 {
-    int absLine = absStep(tpc(), epitch());
+    const StaffType* st = staff() ? staff()->staffTypeForElement(this) : nullptr;
+    int absLine = (st && st->isTwinNoteStaff()) ? absStepTwinNote(epitch()) : absStep(tpc(), epitch());
     updateRelLine(absLine, false);
 }
 

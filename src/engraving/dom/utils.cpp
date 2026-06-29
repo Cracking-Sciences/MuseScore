@@ -725,6 +725,23 @@ int relStep(int pitch, int tpc, ClefType clef)
 }
 
 //---------------------------------------------------------
+//   absStepTwinNote / needsSharpTwinNote
+///   TwinNote staves use a whole-tone scale (6 steps/octave, 2 semitones each) instead of the
+///   diatonic 7-step scale: every other chromatic pitch is a "natural" step, the ones in between
+///   are notated as a sharp of the step below (no flats, no key signature).
+//---------------------------------------------------------
+
+int absStepTwinNote(int pitch)
+{
+    return (pitch / 12) * 6 + (pitch % 12) / 2;
+}
+
+bool needsSharpTwinNote(int pitch)
+{
+    return (pitch % 12) % 2 != 0;
+}
+
+//---------------------------------------------------------
 //   pitch2step
 //   returns one of { 0, 1, 2, 3, 4, 5, 6 }
 //---------------------------------------------------------

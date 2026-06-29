@@ -22,15 +22,67 @@
 
 #include "editstaff.h"
 
+#include "../dom/clef.h"
 #include "../dom/guitarbend.h"
 #include "../dom/masterscore.h"
 #include "../dom/measure.h"
 #include "../dom/score.h"
+#include "../dom/segment.h"
 #include "../dom/staff.h"
 #include "../dom/stafflines.h"
 #include "../dom/stafftype.h"
 
 using namespace mu::engraving;
+
+//---------------------------------------------------------
+//   twinNoteClefFor / remapClefsToTwinNote
+//    Map a staff's existing treble/bass-family clefs onto the TwinNote-flavored
+//    clef variants (same glyph, whole-tone-calibrated pitchOffset) when a staff
+//    is switched to a TwinNote staff type, so existing notes land on the correct
+//    line for the new staff without their pitch/tpc ever being touched.
+//---------------------------------------------------------
+
+static ClefType twinNoteClefFor(ClefType ct)
+{
+    switch (ct) {
+    case ClefType::F:
+    case ClefType::F15_MB:
+    case ClefType::F8_VB:
+    case ClefType::F_8VA:
+    case ClefType::F_15MA:
+    case ClefType::F_B:
+    case ClefType::F_C:
+    case ClefType::F_F18C:
+    case ClefType::F_19C:
+        return ClefType::F_TWINNOTE;
+    default:
+        return ClefType::G_TWINNOTE;
+    }
+}
+
+static ClefType standardClefFor(ClefType ct)
+{
+    return ct == ClefType::F_TWINNOTE ? ClefType::F : ClefType::G;
+}
+
+static void remapStaffClefs(Staff* staff, ClefType (* remap)(ClefType))
+{
+    Score* score = staff->score();
+    track_idx_t track = staff->idx() * VOICES;
+
+    for (Segment* s = score->firstSegment(SegmentType::Clef | SegmentType::HeaderClef); s; s = s->next1enabled()) {
+        EngravingItem* e = s->element(track);
+        if (!e || !e->isClef()) {
+            continue;
+        }
+        Clef* clef = toClef(e);
+        clef->setConcertClef(remap(clef->concertClef()));
+        clef->setTransposingClef(remap(clef->transposingClef()));
+    }
+
+    ClefTypeList defClef = staff->defaultClefType();
+    staff->setDefaultClefType(ClefTypeList(remap(defClef.concertClef), remap(defClef.transposingClef)));
+}
 
 //---------------------------------------------------------
 //   InsertStaff
@@ -316,6 +368,8 @@ void ChangeStaffType::flip(EditData*)
 
     bool invisibleChanged = oldStaffType.invisible() != staffType.invisible();
     bool fromTabToStandard = oldStaffType.isTabStaff() && !staffType.isTabStaff();
+    bool toTwinNote = !oldStaffType.isTwinNoteStaff() && staffType.isTwinNoteStaff();
+    bool fromTwinNote = oldStaffType.isTwinNoteStaff() && !staffType.isTwinNoteStaff();
 
     staffType = oldStaffType;
 
@@ -329,6 +383,12 @@ void ChangeStaffType::flip(EditData*)
 
     if (fromTabToStandard) {
         GuitarBend::adaptBendsFromTabToStandardStaff(staff);
+    }
+
+    if (toTwinNote) {
+        remapStaffClefs(staff, twinNoteClefFor);
+    } else if (fromTwinNote) {
+        remapStaffClefs(staff, standardClefFor);
     }
 
     staff->triggerLayout();

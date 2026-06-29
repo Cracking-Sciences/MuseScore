@@ -1338,6 +1338,9 @@ static const std::vector<Item<ClefType> > CLEF_TYPES = {
 
     { ClefType::C4_8VB,     "C4_8VB",   muse::TranslatableString("engraving/cleftype", "Tenor clef 8va bassa") },
     { ClefType::G8_VB_C,    "G8vbc",    muse::TranslatableString("engraving/cleftype", "G clef ottava bassa with C clef") },
+
+    { ClefType::G_TWINNOTE, "G_TWINNOTE", muse::TranslatableString("engraving/cleftype", "TwinNote treble clef") },
+    { ClefType::F_TWINNOTE, "F_TWINNOTE", muse::TranslatableString("engraving/cleftype", "TwinNote bass clef") },
 };
 
 const muse::TranslatableString& TConv::userName(ClefType v)
