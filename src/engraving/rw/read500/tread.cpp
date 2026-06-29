@@ -3995,6 +3995,8 @@ void TRead::read(StaffType* t, XmlReader& e, ReadContext& ctx)
             t->setShowLedgerLines(e.readInt());
         } else if (tag == "invisible") {
             t->setInvisible(e.readInt());
+        } else if (tag == "wholeTone") {
+            t->setWholeToneStaff(e.readBool());
         } else if (tag == "color") {
             t->setColor(e.readColor());
         } else if (tag == "durations") {

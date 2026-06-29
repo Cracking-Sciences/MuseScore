@@ -3079,6 +3079,9 @@ void TWrite::write(const StaffType* item, XmlWriter& xml, WriteContext& ctx)
     if (item->invisible()) {
         xml.tag("invisible", item->invisible());
     }
+    if (item->isWholeToneStaff()) {
+        xml.tag("wholeTone", item->isWholeToneStaff());
+    }
     if (item->color() != ctx.configuration()->defaultColor()) {
         xml.tagProperty(Pid::COLOR, item->color());
     }

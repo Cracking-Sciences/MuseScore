@@ -2104,7 +2104,17 @@ void Note::updateAccidental(AccidentalState* as)
                 Accidental* a = Factory::createAccidental(this);
                 a->setParent(this);
                 a->setAccidentalType(acci);
-                a->setVisible(visible());
+                // A tied-to note has no memory of its own once its accidental is torn down and
+                // recreated by layout (e.g. after a relayout pass), so if a notation plugin
+                // explicitly hid the tie source's accidental (same sustained pitch), inherit that
+                // hidden state/color here to keep the whole tie chain consistent.
+                const Accidental* tieSrcAcc = (tieBack() && tieBack()->startNote()) ? tieBack()->startNote()->accidental() : nullptr;
+                if (tieSrcAcc && !tieSrcAcc->visible()) {
+                    a->setVisible(false);
+                    a->setColor(tieSrcAcc->color());
+                } else {
+                    a->setVisible(visible());
+                }
                 score()->undoAddElement(a);
             } else if (m_accidental->accidentalType() != acci) {
                 Accidental* a = m_accidental->clone();
