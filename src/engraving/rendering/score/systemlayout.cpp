@@ -2231,7 +2231,14 @@ void SystemLayout::layout2(System* system, LayoutContext& ctx)
                 dist = std::max(dist, staff->staffHeight(m->tick()) + sp->absoluteGap());
             }
         }
-        if (!fixedSpace) {
+        // Two WholeTone staves are allowed to merge seamlessly (e.g. a grand-staff-style pairing):
+        // skip the skyline-based collision clamp below so reduced staffDistance/akkoladeDistance/
+        // userDist configuration isn't fought by auto-expansion when their note content overlaps.
+        // All other staff-type pairings (including ordinary grand staves) keep the normal behavior.
+        bool bothWholeTone = staff->staffType(Fraction(0, 1))->isWholeToneStaff()
+                              && staff2->staffType(Fraction(0, 1))->isWholeToneStaff();
+
+        if (!fixedSpace && !bothWholeTone) {
             // check minimum distance to next staff
             // note that in continuous view, we normally only have a partial skyline for the system
             // a full one is only built when triggering a full layout

@@ -5097,6 +5097,10 @@ void TLayout::layoutForWidth(StaffLines* item, double w, LayoutContext& ctx)
     double dist     = _spatium;
     item->setPos(PointF(0.0, 0.0));
     int _lines;
+    // WholeTone staves hide their middle (3rd of 5) line by default: it's drawn as a ledger-line-
+    // like segment near notes instead (see ChordLayout::updateLedgerLines), so the staff reads as
+    // a continuous whole-tone grid rather than a fixed line cluttering its middle.
+    bool hideMiddleLine = false;
     if (s) {
         ldata->setMag(s->staffMag(item->measure()->tick()));
         item->setVisible(!s->isLinesInvisible(item->measure()->tick()));
@@ -5105,6 +5109,7 @@ void TLayout::layoutForWidth(StaffLines* item, double w, LayoutContext& ctx)
         dist *= st->lineDistance().val();
         _lines = st->lines();
         ldata->setPosY(st->yoffset().val() * _spatium);
+        hideMiddleLine = st->isWholeToneStaff() && _lines == 5;
 //            if (_lines == 1)
 //                  rypos() = 2 * _spatium;
     } else {
@@ -5119,7 +5124,9 @@ void TLayout::layoutForWidth(StaffLines* item, double w, LayoutContext& ctx)
 
     std::vector<LineF> ll;
     for (int i = 0; i < _lines; ++i) {
-        ll.push_back(LineF(x1, y, x2, y));
+        if (!(hideMiddleLine && i == 2)) {
+            ll.push_back(LineF(x1, y, x2, y));
+        }
         y += dist;
     }
     item->setLines(ll);

@@ -1295,6 +1295,13 @@ void ChordLayout::updateLedgerLines(Chord* item, LayoutContext& ctx)
 
     Segment* segment = item->segment();
 
+    // WholeTone staves hide their middle (3rd of 5) staff line and instead draw it as a
+    // ledger-line-like segment near any note that lands on it (see TLayout::layoutForWidth
+    // for the corresponding StaffLines suppression). That line sits *inside* the normal staff
+    // range, so it needs separate handling from the regular outside-staff ledger line scan below.
+    constexpr int WHOLETONE_MID_LINE = 4;
+    bool wholeToneMidLine = false;
+
     if (segment) {   //not palette
         Fraction tick = segment->tick();
         staff_idx_t idx = item->staffIdx() + item->staffMove();
@@ -1304,10 +1311,19 @@ void ChordLayout::updateLedgerLines(Chord* item, LayoutContext& ctx)
         lineDistance  = st->lineDistance(tick);
         staffVisible  = !st->isLinesInvisible(tick);
         stepOffset = st->staffType(tick)->stepOffset();
+
+        if (st->staffType(tick)->isWholeToneStaff()) {
+            for (const Note* note : item->notes()) {
+                if (note->line() + stepOffset == WHOLETONE_MID_LINE) {
+                    wholeToneMidLine = true;
+                    break;
+                }
+            }
+        }
     }
 
     // need ledger lines?
-    if (item->downLine() + stepOffset <= lineBelow + 1 && item->upLine() + stepOffset >= -1) {
+    if (!wholeToneMidLine && item->downLine() + stepOffset <= lineBelow + 1 && item->upLine() + stepOffset >= -1) {
         muse::DeleteAll(item->ledgerLines());
         item->ledgerLines().clear();
         return;
@@ -1419,6 +1435,32 @@ void ChordLayout::updateLedgerLines(Chord* item, LayoutContext& ctx)
         }
         if (minLine < 0 || maxLine > lineBelow) {
             ledgerLineData.insert(ledgerLineData.end(), vecLines.begin(), vecLines.end());
+        }
+    }
+
+    if (wholeToneMidLine) {
+        double minX = std::numeric_limits<double>::max();
+        double maxX = std::numeric_limits<double>::min();
+        bool midLineVisible = false;
+        for (const Note* note : item->notes()) {
+            if (note->line() + stepOffset != WHOLETONE_MID_LINE) {
+                continue;
+            }
+            const double x = note->pos().x() + note->bboxXShift();
+            minX = std::min(minX, x - extraLen * note->mag());
+            maxX = std::max(maxX, x + note->headWidth() + extraLen * note->mag());
+            if (note->visible()) {
+                midLineVisible = true;
+            }
+        }
+        if (minX < maxX) {
+            ledgerLineData.push_back(LedgerLineData {
+                /*line=*/ WHOLETONE_MID_LINE,
+                /*minX=*/ minX,
+                /*maxX=*/ maxX,
+                /*visible=*/ midLineVisible,
+                /*accidental=*/ false
+            });
         }
     }
 
